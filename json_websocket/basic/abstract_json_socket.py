@@ -69,3 +69,20 @@ class AbstractJsonWebsocket():
     def on_message(self, data):
         text_data = json.loads(data)
         self.message_types[text_data["type"]].decode(consumer=self, data=text_data["data"])
+
+    @classmethod
+    def generate_javascript(cls, result):
+        with open(result,"w+") as f:
+            f.write(cls._generate_js())
+
+    @classmethod
+    def _generate_js(cls,s=""):
+        import os
+        import sys
+        for base in cls.__bases__:
+            if hasattr(base,"_generate_js"):
+                s = base._generate_js(s)+"\n"
+        with open(os.path.join(os.path.dirname(os.path.abspath(sys.modules[cls.__module__].__file__)),"websocket_data.js"),"r+") as f:
+            s=s+f.read()
+        return s
+
