@@ -31,7 +31,7 @@ class AbstractCmdJsonWebsocket(AbstractJsonWebsocket):
     message_types: Dict[str, MessageType]
 
     def __init__(self):
-        super().__init__()
+        AbstractJsonWebsocket.__init__(self)
         self.available_cmds = {}
 
         for n,t in MESSAGETYPES.items():
@@ -39,3 +39,6 @@ class AbstractCmdJsonWebsocket(AbstractJsonWebsocket):
 
     def set_cmd(self,cmd,func):
         self.available_cmds[cmd] = func
+
+    def cmd_message(self,cmd,**data):
+        return self.message_types["cmd"].encode(cmd=cmd, data=data)

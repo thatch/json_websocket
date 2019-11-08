@@ -13,6 +13,9 @@ def merge(new_values, default_values):
                 nd[key] = value
             else:
                 nd[key] = nv
+    for key, value in new_values.items():
+        if key not in default_values:
+            nd[key]= value
     return nd
 
 
@@ -39,8 +42,11 @@ class MessageType():
         #    raise NotImplementedError(f"no decoder for {type}")
 
 
+def error_message(consumer,message=None):
+    print(consumer,message)
+
 MESSAGETYPES = {
-    'error': MessageType(type='error'),
+    'error': MessageType(type='error',decode_function=error_message),
 }
 
 
@@ -61,14 +67,18 @@ class AbstractJsonWebsocket():
         print("open")
 
     def on_close(self, code=None, reason=None):
-        print(code, reason)
+        if reason is not None or code is not None:
+            print("Close socket",code, reason)
 
     def on_error(self, e):
-        print(e)
+        print("Socket error:",e)
 
     def on_message(self, data):
         text_data = json.loads(data)
         self.message_types[text_data["type"]].decode(consumer=self, data=text_data["data"])
+
+    def error_message(self,message):
+        return self.message_types['error'].encode(message=message)
 
     @classmethod
     def generate_javascript(cls, result):
