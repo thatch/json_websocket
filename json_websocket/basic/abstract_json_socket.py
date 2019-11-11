@@ -1,3 +1,7 @@
+import sys
+
+import os
+
 import json
 from typing import Dict, Any
 
@@ -81,24 +85,45 @@ class AbstractJsonWebsocket:
         return self.message_types["error"].encode(message=message)
 
     @classmethod
+    def generate_static_files(cls,direction):
+        cls.generate_javascript(os.path.join(direction,"websocket.js"))
+        cls.generate_stylesheet(os.path.join(direction,"websocket.css"))
+
+    @classmethod
     def generate_javascript(cls, result):
         with open(result, "w+") as f:
             f.write(cls._generate_js())
 
     @classmethod
-    def _generate_js(cls, s=""):
-        import os
-        import sys
+    def generate_stylesheet(cls, result):
+        with open(result, "w+") as f:
+            f.write(cls._generate_css())
 
+    @classmethod
+    def _generate_js(cls, s=""):
         for base in cls.__bases__:
             if hasattr(base, "_generate_js"):
                 s = base._generate_js(s) + "\n"
-        with open(
-            os.path.join(
-                os.path.dirname(os.path.abspath(sys.modules[cls.__module__].__file__)),
-                "websocket_data.js",
-            ),
-            "r+",
-        ) as f:
-            s = s + f.read()
+
+        jsfile=os.path.join(
+            os.path.dirname(os.path.abspath(sys.modules[cls.__module__].__file__)),
+            "websocket_data.js",
+        )
+        if os.path.exists(jsfile):
+            with open(jsfile,"r",) as f:
+                s = s + f.read()
+        return s
+
+    @classmethod
+    def _generate_css(cls, s=""):
+        for base in cls.__bases__:
+            if hasattr(base, "_generate_css"):
+                s = base._generate_css(s) + "\n"
+        stylefile = os.path.join(
+            os.path.dirname(os.path.abspath(sys.modules[cls.__module__].__file__)),
+            "websocket_styles.css",
+        )
+        if os.path.exists(stylefile):
+            with open(stylefile,"r",) as f:
+                s = s + f.read()
         return s

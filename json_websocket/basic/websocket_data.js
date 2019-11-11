@@ -2,16 +2,26 @@ if(!logger)
     var logger = console;
 
 if(typeof JsonWebsocket !== 'function')
+    function turnwebsocketbuttons(on) {
+        if(on)
+            $(".websocket_actionbutton").removeClass("websocket_off");
+        else
+            $(".websocket_actionbutton").addClass("websocket_off");
+    }
+
     var JsonWebsocket = class{
         constructor(name,url){
             this.url=url;
             this.ws = null;
             this.RECONNECT_TIME = 10000;
             this.on_connect_functions = [];
+            this.on_disconnect_functions = [];
             this.type_functions = {};
             this.name = name;
             this.reconnect = true;
 
+            this.add_on_connect_function(function () {turnwebsocketbuttons(true)});
+            this.add_on_disconnect_function(function () {turnwebsocketbuttons(false)});
             if(url)
                 this.connect();
         }
@@ -39,6 +49,9 @@ if(typeof JsonWebsocket !== 'function')
             }
         }
         onclose(e){
+            for(let i=0;i<this.on_disconnect_functions.length;i++) {
+                this.on_disconnect_functions[i]();
+            }
             if(this.reconnect) {
                 logger.info((this.name ? this.name : 'Socket') + ' is closed. Reconnect will be attempted in ' + (this.RECONNECT_TIME / 1000.0) + ' second.', e.reason);
                 let t = this;
@@ -70,6 +83,11 @@ if(typeof JsonWebsocket !== 'function')
         add_on_connect_function(callback){
             callback = callback.bind(this);
             this.on_connect_functions.push(callback);
+        }
+
+        add_on_disconnect_function(callback){
+            callback = callback.bind(this);
+            this.on_disconnect_functions.push(callback);
         }
 
 

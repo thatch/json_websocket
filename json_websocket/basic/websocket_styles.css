@@ -1,0 +1,7 @@
+.websocket_actionbutton{
+    cursor: pointer;
+}
+
+.websocket_actionbutton.websocket_off{
+    cursor: not-allowed;
+}
