@@ -43,13 +43,14 @@ class websocket_JsonWebsocket(AbstractJsonWebsocket, websocket.WebSocketApp):
         self.reconnect_time = reconnect_time
         self.start_forever()
 
+
     def start(self):
         threading.Thread(target=self.run_forever, daemon=True).start()
 
     def start_forever(self):
         def _forever():
             while 1:
-                self.run_forever()
+                websocket.WebSocketApp.run_forever(self)
                 time.sleep(self.reconnect_time)
 
         threading.Thread(target=_forever, daemon=True).start()

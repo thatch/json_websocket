@@ -58,6 +58,7 @@ class AbstractJsonWebsocket:
     def __init__(self):
         self.message_types = {}
         self.available_cmds = {}
+        self.open=False
 
         for n, t in MESSAGETYPES.items():
             self.set_message_type(n, t)
@@ -66,13 +67,16 @@ class AbstractJsonWebsocket:
         self.message_types[name] = message_type
 
     def on_open(self):
-        print("open")
+        self.open=True
+    #    print("open")
 
     def on_close(self, code=None, reason=None):
+        self.open=False
         if reason is not None or code is not None:
             print("Close socket", code, reason)
 
     def on_error(self, e):
+        self.open=False
         print("Socket error:", e)
 
     def on_message(self, data):
