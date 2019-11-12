@@ -13,7 +13,7 @@ if(typeof JsonWebsocket !== 'function')
         constructor(name,url){
             this.url=url;
             this.ws = null;
-            this.RECONNECT_TIME = 10000;
+            this.RECONNECT_TIME = 5000;
             this.on_connect_functions = [];
             this.on_disconnect_functions = [];
             this.type_functions = {};
