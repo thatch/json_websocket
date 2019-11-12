@@ -57,7 +57,6 @@ class AbstractJsonWebsocket:
 
     def __init__(self):
         self.message_types = {}
-        self.available_cmds = {}
         self.open=False
 
         for n, t in MESSAGETYPES.items():
@@ -68,7 +67,7 @@ class AbstractJsonWebsocket:
 
     def on_open(self):
         self.open=True
-    #    print("open")
+        print("open")
 
     def on_close(self, code=None, reason=None):
         self.open=False

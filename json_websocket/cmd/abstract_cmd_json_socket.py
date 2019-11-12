@@ -30,8 +30,6 @@ MESSAGETYPES = {
 
 
 class AbstractCmdJsonWebsocket(AbstractJsonWebsocket):
-    message_types: Dict[str, MessageType]
-
     def __init__(self):
         AbstractJsonWebsocket.__init__(self)
         self.available_cmds = {}

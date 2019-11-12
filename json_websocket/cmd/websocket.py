@@ -21,6 +21,7 @@ class websocket_CmdJsonWebsocket(AbstractCmdJsonWebsocket, websocket_JsonWebsock
         subprotocols=None,
         on_data=None,
         reconnect_time=5,
+            use_asyncio=False
     ):
         websocket_JsonWebsocket.__init__(
             self,
@@ -35,6 +36,7 @@ class websocket_CmdJsonWebsocket(AbstractCmdJsonWebsocket, websocket_JsonWebsock
             subprotocols=subprotocols,
             on_data=on_data,
             reconnect_time=reconnect_time,
+            use_asyncio=use_asyncio
         )
 
         AbstractCmdJsonWebsocket.__init__(self)
