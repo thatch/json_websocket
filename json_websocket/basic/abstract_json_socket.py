@@ -11,7 +11,7 @@ def merge(new_values, default_values):
     for key, value in default_values.items():
         nv = new_values.get(key, None)
         if isinstance(value, dict) and isinstance(nv, dict):
-            nd[key] = merge(value, nv)
+            nd[key] = merge(nv, value)
         else:
             if nv is None:
                 nd[key] = value
