@@ -4,7 +4,7 @@ let extend_cmd = function (socket_class) {
         constructor(name,url){
             super(name,url);
             this.cmd_functions = {};
-            this.add_type_funcion('cmd', this.parse_socket_command.bind(this));
+            this.add_type_function('cmd', this.parse_socket_command.bind(this));
         }
 
         parse_socket_command(data) {
@@ -20,7 +20,7 @@ let extend_cmd = function (socket_class) {
             this.type_message("cmd",{cmd:cmd,data:data})
         }
 
-        add_cmd_funcion(name,callback){
+        add_cmd_function(name,callback){
             this.cmd_functions[name]=callback;
         }
     }

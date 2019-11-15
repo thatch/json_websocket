@@ -92,7 +92,7 @@ if(typeof JsonWebsocket !== 'function')
 
 
 
-        add_type_funcion(name,callback){
+        add_type_function(name,callback){
             this.type_functions[name]=callback;
         }
 
