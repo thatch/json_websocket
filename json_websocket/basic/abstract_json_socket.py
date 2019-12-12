@@ -5,6 +5,8 @@ import os
 import json
 from typing import Dict, Any
 
+import numpy as np
+
 
 def merge(new_values, default_values):
     nd = {}
@@ -22,9 +24,22 @@ def merge(new_values, default_values):
             nd[key] = value
     return nd
 
+class DefaultEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, (np.uint64,np.int64)):
+            return str(obj)
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        else:
+            return super().default(obj)
 
 class MessageType:
-    def __init__(self, type, data_dict=None, decode_function=None):
+    def __init__(self, type, data_dict=None, decode_function=None,encoder=DefaultEncoder):
+        self.encoder = encoder
         self.decode_function = decode_function
         if data_dict is None:
             data_dict = {}
@@ -33,7 +48,8 @@ class MessageType:
 
     def encode(self, **kwargs):
         return json.dumps(
-            {"type": self.type, "data": merge({**kwargs}, self.data_dict)}
+            {"type": self.type, "data": merge({**kwargs}, self.data_dict)},
+            cls=self.encoder
         )
 
     def decode(self, consumer, data=None):
