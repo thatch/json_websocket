@@ -1,5 +1,5 @@
 recursive-include json_websocket/basic *.js
-ecursive-include json_websocket/basic *.css
+recursive-include json_websocket/basic *.css
 
 recursive-include json_websocket/cmd *.js
-ecursive-include json_websocket/cmd *.css
+recursive-include json_websocket/cmd *.css
