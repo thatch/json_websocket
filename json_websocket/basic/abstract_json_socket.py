@@ -7,8 +7,6 @@ from typing import Dict, Any
 
 import numpy as np
 
-JWT_ALGORITHM = "HS256"
-
 def merge(new_values, default_values):
     nd = {}
     for key, value in default_values.items():
