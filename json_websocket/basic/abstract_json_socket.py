@@ -1,11 +1,13 @@
-import sys
-
-import os
-
 import json
-from typing import Dict, Any
+import os
+import sys
+from typing import Dict
 
-import numpy as np
+WITH_NUMPY = True
+try:
+    import numpy as np
+except:
+    WITH_NUMPY = False
 
 def merge(new_values, default_values):
     nd = {}
@@ -25,16 +27,17 @@ def merge(new_values, default_values):
 
 class DefaultEncoder(json.JSONEncoder):
     def default(self, obj):
-        if isinstance(obj, (np.uint64,np.int64)):
-            return str(obj)
-        if isinstance(obj, np.integer):
-            return int(obj)
-        elif isinstance(obj, np.floating):
-            return float(obj)
-        elif isinstance(obj, np.ndarray):
-            return obj.tolist()
-        else:
-            return super().default(obj)
+        if WITH_NUMPY:
+            if isinstance(obj, (np.uint64, np.int64)):
+                return str(obj)
+            if isinstance(obj, np.integer):
+                return int(obj)
+            elif isinstance(obj, np.floating):
+                return float(obj)
+            elif isinstance(obj, np.ndarray):
+                return obj.tolist()
+
+        return super().default(obj)
 
 class MessageType:
     def __init__(self, type, data_dict=None, decode_function=None,encoder=DefaultEncoder):
