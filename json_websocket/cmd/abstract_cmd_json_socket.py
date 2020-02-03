@@ -18,8 +18,13 @@ def merge(new_values, default_values):
     return nd
 
 
-def run_cmd(consumer, cmd, data):
-    consumer.available_cmds[cmd](consumer, **data)
+def run_cmd(consumer, source, cmd, data):
+    f = consumer.available_cmds[cmd]
+    if f.accept_consumer:
+        data["consumer"] = consumer
+    if f.accept_source:
+        data["source"] = source
+    return f(**data)
 
 
 MESSAGETYPES = {
@@ -38,7 +43,13 @@ class AbstractCmdJsonWebsocket(AbstractJsonWebsocket):
             self.set_message_type(n, t)
 
     def set_cmd(self, cmd, func):
-        self.available_cmds[cmd] = func
+        varnames = func.__code__.co_varnames
+        def call_func(*args, **kwargs):
+            return func(*args, **kwargs)
+
+        setattr(call_func, "accept_consumer", "consumer" in varnames)
+        setattr(call_func, "accept_source", "source" in varnames)
+        self.available_cmds[cmd] = call_func
 
     def cmd_message(self, cmd, **data):
         return self.message_types["cmd"].encode(cmd=cmd, data=data)

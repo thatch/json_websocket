@@ -3,10 +3,24 @@ if(!logger)
 
 if(typeof JsonWebsocket !== 'function')
     function turnwebsocketbuttons(on) {
-        if(on)
-            $(".websocket_actionbutton").removeClass("websocket_off");
-        else
-            $(".websocket_actionbutton").addClass("websocket_off");
+        if(on){
+            let eles = document.getElementsByClassName("websocket_actionbutton");
+            for(let i=0;i<eles.length;i++) {
+                let element = eles[i];
+                element.className = element.className.replace(/\bwebsocket_off\b/g, "");
+                }
+            }
+        else{
+            let eles = document.getElementsByClassName("websocket_actionbutton");
+            for(let i=0;i<eles.length;i++) {
+                let element = eles[i];
+                let name = "websocket_off";
+                let arr = element.className.split(" ");
+                if (arr.indexOf(name) === -1) {
+                    element.className += " " + name;
+                }
+            }
+        }
     }
 
     var JsonWebsocket = class{
