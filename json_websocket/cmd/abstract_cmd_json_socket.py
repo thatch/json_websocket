@@ -47,7 +47,7 @@ class AbstractCmdJsonWebsocket(AbstractJsonWebsocket):
         def call_func(*args, **kwargs):
             return func(*args, **kwargs)
 
-        print(cmd, varnames)
+        # print(cmd, varnames)
         setattr(call_func, "accept_consumer", "consumer" in varnames)
         setattr(call_func, "accept_source", "source" in varnames)
         self._available_cmds[cmd] = call_func

@@ -85,7 +85,7 @@ class AbstractJsonWebsocket:
 
     def on_open(self):
         self.open=True
-        print("open")
+        print(f"open {self}")
 
     def on_close(self, code=None, reason=None):
         self.open=False

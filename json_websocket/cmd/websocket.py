@@ -1,10 +1,5 @@
-import threading
-import time
-
-import websocket
-
-from ..basic.websocket import websocket_JsonWebsocket
 from .abstract_cmd_json_socket import AbstractCmdJsonWebsocket
+from ..basic.websocket import websocket_JsonWebsocket
 
 
 class websocket_CmdJsonWebsocket(AbstractCmdJsonWebsocket, websocket_JsonWebsocket):
