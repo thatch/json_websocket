@@ -1,5 +1,5 @@
-import threading
 import asyncio
+import threading
 import time
 
 import websocket
@@ -48,6 +48,7 @@ class websocket_JsonWebsocket(AbstractJsonWebsocket, websocket.WebSocketApp):
         self.start_forever()
 
 
+
     def start(self):
         if self.use_asyncio:
             asyncio.run(self.run_forever())
@@ -55,23 +56,17 @@ class websocket_JsonWebsocket(AbstractJsonWebsocket, websocket.WebSocketApp):
             threading.Thread(target=self.run_forever, daemon=True).start()
 
     def start_forever(self):
-        async def _async_forever():
-            while 1:
-                websocket.WebSocketApp.run_forever(self)
-                if self.use_asyncio:
-                    await asyncio.sleep(self.reconnect_time)
-                else:
-                    time.sleep(self.reconnect_time)
-        def _forever():
-            while 1:
-                websocket.WebSocketApp.run_forever(self)
-                if self.use_asyncio:
-                    time.sleep(self.reconnect_time)
-                else:
-                    time.sleep(self.reconnect_time)
-
         if self.use_asyncio:
-            self.asycio_loop=asyncio.get_event_loop()
+            async def _async_forever():
+                while 1:
+                    websocket.WebSocketApp.run_forever(self)
+                    await asyncio.sleep(self.reconnect_time)
+
+            self.asycio_loop = asyncio.get_event_loop()
             self.asycio_loop.create_task(_async_forever())
         else:
+            def _forever():
+                while 1:
+                    websocket.WebSocketApp.run_forever(self)
+                    time.sleep(self.reconnect_time)
             threading.Thread(target=_forever, daemon=True).start()
