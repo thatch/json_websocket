@@ -16,8 +16,9 @@ let extend_cmd = function (socket_class) {
             else logger.warn('Unknown command:',cmd.cmd);
         }
 
-        cmd_message(cmd, data={}){
-            this.type_message("cmd",{cmd:cmd,data:data})
+        cmd_message(cmd, data={},options={}){
+            options.expect_response = options.expect_response !== undefined ? options.expect_response : true
+            return this.type_message("cmd",{cmd:cmd,data:data},options)
         }
 
         add_cmd_function(name,callback){

@@ -1,4 +1,6 @@
-from ..basic.abstract_json_socket import MessageType, AbstractJsonWebsocket
+import inspect
+
+from ..basic.abstract_json_socket import AbstractJsonWebsocket
 
 
 def merge(new_values, default_values):
@@ -15,42 +17,79 @@ def merge(new_values, default_values):
     return nd
 
 
-def run_cmd(consumer, cmd, data):
-    f = consumer.get_cmd(cmd)
-    if f is None:
-        raise AttributeError(str(cmd) + " not found")
-    if f.accept_consumer:
-        data["consumer"] = consumer
-    return f(**data)
+class WebsocketCommand():
+    def __init__(self, name, func, raw=False):
+        self.raw = raw
+        self.func = func
+        self.name = name
+        args, varargs, varkw, defaults, kwonlyargs, kwonlydefaults, annotations = inspect.getfullargspec(self.func)
+        len_defaults = 0
+        if defaults is not None:
+            len_defaults = len(defaults)
+        self.func_args = args[:len(args) - len_defaults]
+        if len_defaults:
+            self.func_kwargs = dict(zip(args[-len_defaults:], defaults))
+        else:
+            self.func_kwargs = {}
 
+        if kwonlydefaults is not None:
+            self.func_kwargs.update(kwonlydefaults)
 
-MESSAGETYPES = {
-    "cmd": MessageType(
-        type="cmd", data_dict={"cmd": None, "data": {}}, decode_function=run_cmd
-    )
-}
+        self.func_with_kwargs = varkw is not None
+        self.typing = annotations
+
+    def __call__(self, consumer, data):
+        kwargs = {'consumer': consumer}
+        kwargs.update(self.func_kwargs)
+        if self.raw:
+            data = data
+        else:
+            data = data['data']['data']
+        kwargs.update(data)
+        if not self.func_with_kwargs:
+            kwargs = {k: v for k, v in kwargs.items() if k in self.func_args + list(self.func_kwargs.keys())}
+
+        return self.func(**kwargs)
+
+    def info(self):
+        return {'args': self.func_args,
+                'kwargs': self.func_kwargs,
+                'typing': {k: (v.__name__ if inspect.isclass(v) else str(v)) for k, v in self.typing.items()}
+                }
 
 
 class AbstractCmdJsonWebsocket(AbstractJsonWebsocket):
     def __init__(self):
-        AbstractJsonWebsocket.__init__(self)
+        super().__init__()
         self._available_cmds = {}
+        self.add_type_function("cmd", self.run_cmd)
 
-        for n, t in MESSAGETYPES.items():
-            self.set_message_type(n, t)
+    def run_cmd(self, base_data):
+        data = base_data["data"]
+        f = self.get_cmd(data['cmd'])
+        if f is None:
+            raise AttributeError("cmd '"+str(data['cmd']) + "' not found")
+
+        return f(self, base_data)
 
     def get_cmd(self, cmd):
         return self._available_cmds.get(cmd)
 
     def set_cmd(self, cmd, func):
-        varnames = func.__code__.co_varnames
-        def call_func(*args, **kwargs):
-            return func(*args, **kwargs)
+        if not isinstance(func, WebsocketCommand):
+            func = WebsocketCommand(cmd, func)
+        self._available_cmds[cmd] = func
 
-        # print(cmd, varnames)
-        setattr(call_func, "accept_consumer", "consumer" in varnames)
-        setattr(call_func, "accept_source", "source" in varnames)
-        self._available_cmds[cmd] = call_func
+    def get_cmd_message(self, cmd, data=None):
+        if data is None:
+            data = {}
+        return self.get_type_message("cmd", {'cmd': cmd, 'data': data})
 
-    def cmd_message(self, cmd, **data):
-        return self.message_types["cmd"].encode(cmd=cmd, data=data)
+    def send_cmd_message(self, cmd, data=None, expect_response=True, **kwargs):
+        if data is None:
+            data = {}
+        send_data = {'cmd': cmd, 'data': data}
+        return self.send_type_message(type="cmd", data=send_data, expect_response=expect_response, **kwargs)
+
+    def get_available_cmds(self):
+        return {cmd: callfunc.info() for cmd, callfunc in self._available_cmds.items()}

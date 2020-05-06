@@ -6,67 +6,96 @@ import websocket
 
 from .abstract_json_socket import AbstractJsonWebsocket
 
-
-class websocket_JsonWebsocket(AbstractJsonWebsocket, websocket.WebSocketApp):
-    def __init__(
-        self,
-        url,
-        header=None,
-        on_ping=None,
-        on_pong=None,
-        on_cont_message=None,
-        keep_running=True,
-        get_mask_key=None,
-        cookie=None,
-        subprotocols=None,
-        on_data=None,
-        reconnect_time=5,
-        use_asyncio=False,
-    ):
-
-        AbstractJsonWebsocket.__init__(self)
-        websocket.WebSocketApp.__init__(
-            self,
-            url=url,
-            header=header,
-            on_open=self.on_open,
-            on_message=self.on_message,
-            on_error=self.on_error,
-            on_close=self.on_close,
-            on_ping=on_ping,
-            on_pong=on_pong,
-            on_cont_message=on_cont_message,
-            keep_running=keep_running,
-            get_mask_key=get_mask_key,
-            cookie=cookie,
-            subprotocols=subprotocols,
-            on_data=on_data,
-        )
-        self.use_asyncio = use_asyncio
-        self.reconnect_time = reconnect_time
-        self.asycio_loop=None
-        self.start_forever()
+SLEEP_TIME = 0.1
 
 
+def realize_abstract_websocket(abstract_json_websocket, url, header=None,
+                               reconnect_time=5,
+                               use_asyncio=False,
+                               *args, **kwargs
+                               ):
+    asbws = abstract_json_websocket(*args, **kwargs)
 
-    def start(self):
-        if self.use_asyncio:
-            asyncio.run(self.run_forever())
+    class _WS(websocket.WebSocketApp):
+        def __init__(self, url, **kwargs):
+            super().__init__(url, header=header,
+                             on_error=self.on_error,
+                             on_open=self.on_open,
+                             on_message=self.on_message,
+                             on_close=self.on_close)
+
+        def on_message(self, data):
+            print(data)
+            return asbws.on_message(data)
+
+        def on_open(self):
+            return asbws.on_open()
+
+        def on_error(self, e):
+            return asbws.on_error(e)
+
+        def on_close(self, code=None, reason=None):
+            return asbws.on_close(code=code, reason=reason)
+
+    def send(data):
+        asbws.ws.send(data)
+
+    asbws.send_function = send
+
+    def start(in_background=True):
+        if in_background:
+            threading.Thread(target=asbws.ws.run_forever, daemon=True).start()
         else:
-            threading.Thread(target=self.run_forever, daemon=True).start()
+            asbws.ws.run_forever()
 
-    def start_forever(self):
-        if self.use_asyncio:
+    asbws.start = start
+
+    def stop():
+        asbws.ws.close()
+        asbws.running = False
+
+    asbws.stop = stop
+
+    def start_forever(in_background=True):
+        if asbws.use_asyncio:
             async def _async_forever():
-                while 1:
-                    websocket.WebSocketApp.run_forever(self)
-                    await asyncio.sleep(self.reconnect_time)
+                asbws.running = True
+                while asbws.running:
+                    asbws.start(in_background=False)
+                    st = time.time()
+                    while time.time() - st < asbws.reconnect_time and asbws.running:
+                        await asyncio.sleep(SLEEP_TIME)
 
-            self.asycio_loop = asyncio.get_event_loop()
-            self.asycio_loop.create_task(_async_forever())
+            asbws.asycio_loop = asyncio.get_event_loop()
+            t = asbws.asycio_loop.create_task(_async_forever())
+            if in_background:
+                asbws.asycio_loop.run_until_complete(t)
+            else:
+                return t
         else:
             def _forever():
-                while 1:
-                    websocket.WebSocketApp.run_forever(self)
-                    time.sleep(self.reconnect_time)
-            threading.Thread(target=_forever, daemon=True).start()
+                asbws.running = True
+                while asbws.running:
+                    asbws.start(in_background=False)
+                    st = time.time()
+                    while time.time() - st < asbws.reconnect_time and asbws.running:
+                        time.sleep(SLEEP_TIME)
+
+            t = threading.Thread(target=_forever, daemon=True)
+            if in_background:
+                t.start()
+            else:
+                t.run()
+
+    asbws.start_forever = start_forever
+
+    asbws.ws = _WS(url=url)
+
+    asbws.use_asyncio = use_asyncio
+    asbws.reconnect_time = reconnect_time
+    asbws.asycio_loop = None
+    asbws.running = False
+    return asbws
+
+
+websocket_JsonWebsocket = lambda *args, **kwargs: realize_abstract_websocket(*args, **kwargs)

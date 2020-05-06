@@ -5,7 +5,7 @@ with open("requirements.txt") as f:
 
 setup = dict(
     name="json_websocket",
-    version="0.2",
+    version="0.3",
     author="Julian Kimmig",
     author_email="julian-kimmig@gmx.net",
     description="json-websocket",
