@@ -54,7 +54,8 @@ class WebsocketCommand():
     def info(self):
         return {'args': self.func_args,
                 'kwargs': self.func_kwargs,
-                'typing': {k: (v.__name__ if inspect.isclass(v) else str(v)) for k, v in self.typing.items()}
+                'typing': {k: (v.__name__ if inspect.isclass(v) else str(v)) for k, v in self.typing.items()},
+                'doc':self.func.__doc__,
                 }
 
 
