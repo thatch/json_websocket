@@ -10,8 +10,9 @@ let extend_cmd = function (socket_class) {
         parse_socket_command(data) {
             var cmd = data.data;
             logger.debug('Command:', cmd);
-            if(typeof this.cmd_functions[cmd.cmd] !== "undefined"){
-                this.cmd_functions[cmd.cmd](cmd.data);
+            let func = this.cmd_functions[cmd.cmd];
+            if(typeof func !== "undefined"){
+                func(func.raw?data:cmd.data);
             }
             else logger.warn('Unknown command:',cmd.cmd);
         }
@@ -21,8 +22,9 @@ let extend_cmd = function (socket_class) {
             return this.type_message("cmd",{cmd:cmd,data:data},options)
         }
 
-        add_cmd_function(name,callback){
+        add_cmd_function(name,callback,raw=false){
             this.cmd_functions[name]=callback;
+            this.cmd_functions[name].raw=raw
         }
     }
     return new_socket_class
