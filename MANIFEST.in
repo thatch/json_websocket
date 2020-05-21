@@ -3,3 +3,4 @@ recursive-include json_websocket/basic *.css
 
 recursive-include json_websocket/cmd *.js
 recursive-include json_websocket/cmd *.css
+include *.txt
